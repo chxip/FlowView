@@ -14,6 +14,21 @@ import android.view.ViewGroup
  * @CreateDate: 2021/8/10 10:01
  */
 class FlowLayout : ViewGroup {
+    //数据Adapter
+    private var flowLayoutAdapter: FlowLayoutAdapter<*>? = null
+
+    //点击事件
+    private var onItemClickListener: OnItemClickListener? = null
+
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener) {
+        this.onItemClickListener = onItemClickListener
+    }
+
+    interface OnItemClickListener {
+        fun onItemClick(view: View, position: Int, parent: FlowLayout)
+    }
+
+
     //每一个Item横向间距
     private var mHorizontalSpacing = dp2px(0f)
 
@@ -60,6 +75,9 @@ class FlowLayout : ViewGroup {
      * 测量
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (flowLayoutAdapter == null) {
+            return
+        }
         //清空上次保存的数据
         allLineHeights.clear()
         allLineViews.clear()
@@ -120,7 +138,8 @@ class FlowLayout : ViewGroup {
                 parentNeededWidth = Math.max(parentNeededWidth, lineWidth)
 
                 //初始化下一行的数据
-                lineWidth = childMeasuredWidth + mHorizontalSpacing + childLP.leftMargin + childLP.rightMargin
+                lineWidth =
+                    childMeasuredWidth + mHorizontalSpacing + childLP.leftMargin + childLP.rightMargin
                 lineViews = mutableListOf()
                 lineHeight = 0
                 maxTopMargin = 0
@@ -195,6 +214,21 @@ class FlowLayout : ViewGroup {
         }
     }
 
+    /**
+     * 设置Adapter
+     */
+    fun setAdatper(adapter: FlowLayoutAdapter<*>) {
+        this.flowLayoutAdapter = adapter
+        removeAllViews()
+        for (index in 0 until adapter.getCount()) {
+            val view = adapter.getView(this, index, adapter.getData(index)!!)
+            view.setOnClickListener {
+                onItemClickListener?.onItemClick(it,index,this)
+            }
+            addView(view)
+        }
+        invalidate()
+    }
 
     /**
      * 重写generateLayoutParams方法，返回自定义的LayoutParams
